@@ -16,6 +16,28 @@ Articles:
 - Cross-compilation toolchain for compiling the target linux OS kernel
 - QEMU for emulating the operating system
 
+[Documentation](https://crosstool-ng.github.io/docs/)
+
+[GitHub - messense/homebrew-macos-cross-toolchains: macOS cross compiler toolchains](https://github.com/messense/homebrew-macos-cross-toolchains)
+
+[Cross compiling made easy, using Clang and LLVM · mcilloni's blog](https://mcilloni.ovh/2021/02/09/cxx-cross-clang/)
+
+[GitHub - tpoechtrager/osxcross: Mac OS X cross toolchain for Linux, FreeBSD, OpenBSD and Android (Termux)](https://github.com/tpoechtrager/osxcross)
+
+others:
+
+https://stackoverflow.com/questions/72253511/using-llvm-clang-as-a-cross-compiler
+
+https://stackoverflow.com/questions/61771494/how-do-i-cross-compile-llvm-clang-for-aarch64-on-x64-host
+
+https://github.com/crosstool-ng/crosstool-ng/issues/1337
+
+## Prerequisites
+
+qemu
+
+## Getting started
+
 ## Setup
 
 ## Using crosstool-NG
@@ -50,6 +72,55 @@ $CC test/c/hello.c -o hello_aarch64
 ## Using cross-compilation toolchain from Docker
 
 ### Install Docker container
+### Cross-compilation toolchain
+
+#### Using crosstool-NG
+
+Build a cross-compilation toolchain through `crosstool-NG`,
+
+Mac m1,
+
+```sh
+brew install crosstool-ng coreutils
+```
+
+Create case-sensitive filesystem,
+
+```sh
+export target=x86_64-unknown-linux-gnu
+```
+
+```sh
+hdiutil create -type SPARSE -fs 'Case-sensitive Journaled HFS+' -size 16g -volname build build.dmg
+hdiutil create -type SPARSE -fs 'Case-sensitive Journaled HFS+' -size 1g -volname tools tools.dmg
+# Detach old if exists
+hdiutil detach /Volumes/build -force | true
+hdiutil detach /Volumes/tools -force | true
+# Attach new
+hdiutil attach build.dmg.sparseimage
+hdiutil attach tools.dmg.sparseimage
+ls /Volumes
+```
+
+Build Toolchain,
+
+```sh
+mkdir /Volumes/build/src
+cd ./toolchains/${{target}}
+# `ct-ng source` hint to download all sources(Optional)
+ct-ng source
+ct-ng build -j $(($(nproc) - 1))
+```
+
+Archive Toolchain,
+
+```sh
+cd /Volumes/tools
+tar czf ${{target}}-aarch64-darwin.tar.gz ${{target}}
+sha256sum ${{target}}-aarch64-darwin.tar.gz | tee ${{target}}-aarch64-darwin.tar.gz.sha256
+```
+
+#### Using Docker
 
 ```sh
 docker run --rm dockcross/linux-x86_64-full > ./dockcross-linux-x86_64
